@@ -16,10 +16,13 @@
 
 import logging
 
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v2 as tf
 from google.protobuf import text_format
 # from object_detection.protos import string_int_label_map_pb2
 from protos import string_int_label_map_pb2
+
+gfile = tf.io.gfile
 
 def _validate_label_map(label_map):
   """Checks if a label map is valid.
@@ -129,7 +132,7 @@ def load_labelmap(path):
   Returns:
     a StringIntLabelMapProto
   """
-  with tf.gfile.GFile(path, 'r') as fid:
+  with gfile.GFile(path, 'r') as fid:
     label_map_string = fid.read()
     label_map = string_int_label_map_pb2.StringIntLabelMap()
     try:

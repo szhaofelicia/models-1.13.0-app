@@ -62,7 +62,7 @@ PATH_TO_TEST_IMAGES_DIR = '/media/felicia/Data/mlb-youtube/frames_continuous/swi
 
 
 depth_dict=pickle.load(open("/home/felicia/research/baseballplayer/pickles/batch_1000_outputs.pkl",'rb'))
-epth_dict=pickle.load(open('/media/felicia/Data/baseballplayers/pickles/batch_1000_outputs.pkl','rb'))
+# epth_dict=pickle.load(open('/media/felicia/Data/baseballplayers/pickles/batch_1000_outputs.pkl','rb'))
 
 filenames=depth_dict['filenames']
 depth_outputs=depth_dict['outputs'] # B * 240 * 320 *1 , unrescaled
