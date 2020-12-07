@@ -41,7 +41,6 @@ for i in range(len_num_shards):
     nframes=len(images)
 
     ave_score=list() # average score of dense optical flow for each frame
-    # ave_flow=list() #  average dense optical flow for each video
     flow_dict={} # dictionary of average dense optical flow
 
     for j in tqdm(range(nframes)):
@@ -73,7 +72,6 @@ for i in range(len_num_shards):
         
         if j==nframes-1 or steps[j+1]==0:
             flow_dict[vd_names[j]]=np.mean(temp,axis=0)
-            # ave_flow+=[np.mean(temp,axis=0)]*(steps[j]+1)
 
     output_filename = os.path.join(
         outputfolder,

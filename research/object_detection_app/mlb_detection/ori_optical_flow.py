@@ -4,9 +4,6 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-
 import math
 import csv
 
@@ -41,7 +38,6 @@ for i in range(1):
     nframes=len(images)
 
     ave_score=[] # average score of dense optical flow for each frame
-    # ave_flow=list() #  average dense optical flow for each video
     dense_flow=[] # dictionary of average dense optical flow
 
     for j in tqdm(range(nframes)):
@@ -73,7 +69,7 @@ for i in range(1):
 
     output_filename = os.path.join(
         outputfolder,
-        '%s-%s-of-%s.npy' % ('ori_flow_bbgame_swing',str(i),str(len_num_shards)))
+        '%s-%s-of-%s.npy' % ('ori_flow_bbgame_swing_test',str(i),str(len_num_shards)))
 
     new_dict={
         'ave_score':np.array(ave_score), # np.array: B*1

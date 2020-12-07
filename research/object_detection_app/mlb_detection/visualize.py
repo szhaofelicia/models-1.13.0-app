@@ -186,33 +186,46 @@ HEIGHT=720
 WIDTH=1280
 IMAGE_SIZE = (24, 16) 
 min_flow=10
-NORMALIZED_FLOW=True
-if NORMALIZED_FLOW:
-    flow_thresh=[0.01,0.03,0.05,0.07,0.1,0.13,0.15,0.17,0.2] #[0.01,0.05,0.1,0.15,0.2]
-else:
+
+NORMALIZED_FLOW='QUANTILE' # # 'NORMALIZED','ORIGINAL','QUANTILE'
+if NORMALIZED_FLOW == 'NORMALIZED':
+    flow_thresh= np.arange(0.07,0.13,0.01) #[0.01,0.03,0.05,0.07,0.1,0.13,0.15,0.17,0.2] #[0.01,0.05,0.1,0.15,0.2]
+elif NORMALIZED_FLOW=='ORIGINAL':
     flow_thresh=[1,3,5,7,10]
+else:
+    flow_thresh= np.arange(0.78,0.86,0.01)
+
 
 
 image_dir='/media/felicia/Data/object_detection/data/%s'%activity
 image_name='image_bbgame_swing'
 
 flow_dir='/media/felicia/Data/object_detection/optical_flow/%s'%activity
-AVERAGE_FLOW=False
-if AVERAGE_FLOW:
+FILTERING_TYPE= 'AVERAGE' # 'AVERAGE','ORIGINAL','WINDOW'
+if FILTERING_TYPE=='AVERAGE':
     flow_name='ave_flow_bbgame_swing'
     flow_type='aveflow'
-else:
-    flow_name='ori_flow_bbgame_swing'
+elif FILTERING_TYPE=='ORIGINAL':
+    flow_name='wind_flow_bbgame_swing'
     flow_type='oriflow'
+else:
+    flow_name='wnd_flow_bbgame_swing'
+    flow_type='wndflow'
+    buffer=5
 
+max_area=1
+AREA_CONDITION=True
+if AREA_CONDITION:
+    max_area=0.25 # default: 1
+    # area_name='area%s' % ("{:.0%}".format(max_area))
+    min_area=0.01
+    area_name='area%s%s' % ("{:.0%}".format(max_area),"{:.0%}".format(min_area))
+else:
+    area_name=''
 
 bbox_dir='/media/felicia/Data/object_detection/bbox/%s'%activity
 bbox_name='bbox_bbgame_swing_person'
 valid_name='valid_bbgame_swing'
-
-# outputfolder='/media/felicia/Data/object_detection/vis/bbox/%s/minflow_%s'%(activity,"{:02d}".format(min_flow))
-# if not os.path.exists(outputfolder):
-#     os.makedirs(outputfolder)
 
 len_num_shards=6
 
@@ -240,15 +253,18 @@ for i in range(1):
     all_scores=bbox_dict['scores']
     all_classes=bbox_dict['classes']
 
-    for f in tqdm(flow_thresh[:7]):
+    for f in tqdm(flow_thresh):
 
-        if NORMALIZED_FLOW:
-            valid_path = os.path.join(bbox_dir,'%s-%s-of-%s_%s%s.npy' % (valid_name,str(i),str(len_num_shards),flow_type,"{:.0%}".format(f)))
-            outputfolder='/media/felicia/Data/object_detection/vis/bbox/%s/%s_%s'%(activity,flow_type,"{:.0%}".format(f))
-
+        if NORMALIZED_FLOW == 'NORMALIZED':
+            valid_path = os.path.join(bbox_dir,'%s-%s-of-%s_%s%s%s.npy' % (valid_name,str(i),str(len_num_shards),flow_type,"{:.0%}".format(f),area_name))
+            outputfolder='/media/felicia/Data/object_detection/vis/bbox/%s/%s%s%s'%(activity,flow_type,"{:.0%}".format(f),area_name)
+        elif NORMALIZED_FLOW=='ORIGINAL':
+            valid_path = os.path.join(bbox_dir,'%s-%s-of-%s_%s%s%s.npy' % (valid_name,str(i),str(len_num_shards),flow_type,"{:02d}".format(f),area_name))
+            outputfolder='/media/felicia/Data/object_detection/vis/bbox/%s/%s%s%s'%(activity,flow_type,"{:02d}".format(f),area_name)
         else:
-            valid_path = os.path.join(bbox_dir,'%s-%s-of-%s_%s%s.npy' % (valid_name,str(i),str(len_num_shards),flow_type,"{:02d}".format(f)))
-            outputfolder='/media/felicia/Data/object_detection/vis/bbox/%s/%s_%s'%(activity,flow_type,"{:02d}".format(f))
+            valid_path = os.path.join(bbox_dir,'%s-%s-of-%s_%s%s%s.npy' % (valid_name,str(i),str(len_num_shards),flow_type,"{:.2f}".format(f)+'p',area_name))
+            outputfolder='/media/felicia/Data/object_detection/vis/bbox/%s/%s%s%s'%(activity,flow_type,"{:.2f}".format(f)+'p',area_name)
+        
 
         if not os.path.exists(outputfolder):
             os.makedirs(outputfolder)
@@ -265,9 +281,9 @@ for i in range(1):
         flow_dict=flow_dict.item()
 
         ave_scores=flow_dict['ave_score']
-        if AVERAGE_FLOW:
+        if FILTERING_TYPE == 'AVERAGE':
             flow=flow_dict['flow_dict']
-        else:
+        elif FILTERING_TYPE == 'ORIGINAL':
             flow=flow_dict['dense_flow']
 
         nframes=len(images)
@@ -276,9 +292,9 @@ for i in range(1):
             image_bbox0=copy.deepcopy(images[j])
             image_bbox1=copy.deepcopy(images[j])
 
-            if AVERAGE_FLOW:
+            if FILTERING_TYPE=='AVERAGE':
                 flow_rgb=np.float32(flow[vd_names[j]])
-            else:
+            elif FILTERING_TYPE=='ORIGINAL':
                 flow_rgb=np.float32(flow[j])
             flow_gray=cv2.cvtColor(flow_rgb,cv2.COLOR_BGR2GRAY)
 
@@ -314,14 +330,18 @@ for i in range(1):
 
             plt.suptitle('Video:%s Step:%s'%(vd_names[j],"{:.0%}".format(f)))
 
-            if NORMALIZED_FLOW:
+            if NORMALIZED_FLOW == 'NORMALIZED':
                 output_filename = os.path.join(
                     outputfolder,
                     '%s%s_%s.png' % (vd_names[j].decode("utf-8"),"{:04d}".format(steps[j]),"{:.0%}".format(f)))
-            else:
+            elif NORMALIZED_FLOW == 'ORIGINAL':
                 output_filename = os.path.join(
                     outputfolder,
                     '%s%s_%s.png' % (vd_names[j].decode("utf-8"),"{:04d}".format(steps[j]),"{:02d}".format(f)))
+            else:
+                output_filename = os.path.join(
+                    outputfolder,
+                    '%s%s_%s.png' %  (vd_names[j].decode("utf-8"),"{:04d}".format(steps[j]),"{:.2f}".format(f)+'p'))
 
             plt.savefig(output_filename,doi=100)
             plt.close()

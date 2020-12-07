@@ -127,6 +127,7 @@ def main(_):
   # Size, in inches, of the output images.
 
   for i in range(len_num_shards):
+
     valid_boxes=[]
     valid_scores=[]
     valid_classes=[]

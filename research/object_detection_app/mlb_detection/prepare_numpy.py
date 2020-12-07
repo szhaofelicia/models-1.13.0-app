@@ -159,6 +159,9 @@ def create_numpy(name, output_dir, input_dir, label_file, input_pattern,
   label_minibatch=list()
   video_minibatch=list()
 
+  print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
+  print('shard_id',shard_id)
+
   for i, filename in enumerate(filenames):
 
     frames, video_timestamps, _ = video_to_frames(
@@ -174,7 +177,9 @@ def create_numpy(name, output_dir, input_dir, label_file, input_pattern,
 
     image_minibatch.append(frames)
 
-    steps=np.array([math.floor(x/0.0667) for x in video_timestamps])
+    # duration=video_timestamps[1]
+    steps=np.array([x for x in range(len(video_timestamps))])
+    # print(i,filename,steps,video_timestamps)
     step_minibatch.append(steps)
 
     labels=[LABEL]*len(steps)
@@ -184,6 +189,7 @@ def create_numpy(name, output_dir, input_dir, label_file, input_pattern,
     video_minibatch+=vids
 
     if (i + 1) % files_per_shard == 0 or i == len(filenames) - 1:
+      # if shard_id==2:
       output_filename = os.path.join(
           output_path,
           '%s-%s-of-%s.npy' % (name,
@@ -209,6 +215,9 @@ def create_numpy(name, output_dir, input_dir, label_file, input_pattern,
       step_minibatch=list()
       label_minibatch=list()
       video_minibatch=list()
+
+      # print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
+      # print('shard_id',shard_id)
 
 
 def main(_):
